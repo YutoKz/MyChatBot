@@ -1,0 +1,36 @@
+"""
+最終更新: 2024/09/18
+"""
+
+[project]
+name = "mychatbot"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = " ??? ", email = " ??? " }
+]
+dependencies = [
+    "streamlit>=1.38.0",
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-openai>=0.2.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.rye.scripts]
+script_01 = { cmd = "streamlit run ./src/01_CopyChatGPT/01_.py", env = { OPENAI_API_KEY = " 自分の API KEY " } }
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mychatbot"]
