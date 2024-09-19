@@ -27,7 +27,13 @@ managed = true
 dev-dependencies = []
 
 [tool.rye.scripts]
-script_01 = { cmd = "streamlit run ./src/01_CopyChatGPT/01_.py", env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_01 = { cmd = "streamlit run ./src/01_CopyChatGPT/01_.py",            env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_02 = { cmd = "streamlit run ./src/02_Sidebar/02.py",                 env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_03 = { cmd = "streamlit run ./src/03_SummarizeWEB/03.py",            env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_04 = { cmd = "streamlit run ./src/04_SummarizeYouTubeLevel1/04.py",  env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_05 = { cmd = "streamlit run ./src/05_SummarizeYouTubeLevel2/05.py",  env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_06 = { cmd = "streamlit run ./src/06_VectorDB/06.py",                env = { OPENAI_API_KEY = " 自分の API KEY " } }
+script_07 = { cmd = "streamlit run ./src/07_PDFRAG/07.py",                  env = { OPENAI_API_KEY = " 自分の API KEY " } }
 
 [tool.hatch.metadata]
 allow-direct-references = true
