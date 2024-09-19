@@ -7,7 +7,7 @@ name = "mychatbot"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
-    { name = " ??? ", email = " ??? " }
+    { name = "YutoKZ", email = "yuto@gmail.com" }
 ]
 dependencies = [
     "streamlit>=1.38.0",
