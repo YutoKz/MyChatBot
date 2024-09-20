@@ -38,11 +38,14 @@ def select_model():
     st.session_state.max_token = OpenAI.modelname_to_contextsize(st.session_state.model_name) - 300
     return ChatOpenAI(temperature=0, model=st.session_state.model_name)
 
+# -------------------------------------------------------------------------------------------------------
+# VectorDB
 
 def get_pdf_text():
     uploaded_file = st.file_uploader(
         label='Upload your PDF here😇',
-        type='pdf'
+        type='pdf',
+        accept_multiple_files=False,
     )
     if uploaded_file:
         pdf_reader = PdfReader(uploaded_file)
@@ -115,7 +118,7 @@ def page_pdf_upload_and_build_vector_db():
     if qdrant:
         with container_manager:
             st.markdown("## Manage")
-            record_list = qdrant.client.scroll(COLLECTION_NAME, limit=100)
+            record_list = qdrant.client.scroll(COLLECTION_NAME, limit=200)
 
             if not record_list:
                 st.warning("No Data")
@@ -129,10 +132,13 @@ def page_pdf_upload_and_build_vector_db():
                 if st.button("Delete"):
                     qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[selected[-32:]])
                     st.success(f"ID: {selected[-32:]} deleted.")
+                if st.button("DeleteALL"):
+                    for record in record_list[0]:
+                        qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[str(record.id)])
 
 
-# ------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+# Ask
 
 def build_qa_model(llm):
     qdrant = load_qdrant()
@@ -189,7 +195,9 @@ def page_ask_my_pdf():
             st.markdown("##### result")
             st.write(answer["result"])
             st.markdown("##### source_documents")
-            st.write(answer["source_documents"])
+            for i in range(len(answer["source_documents"])):
+                st.markdown(f"{i+1}.")
+                st.write(answer["source_documents"][i].page_content)
 
 # ------------------------------------------------------------------------------------------------------
 
