@@ -1,0 +1,52 @@
+# Qdrant
+Record(
+    id='0056c86a04cb4d16b1698afb4a62f7f0', 
+    payload={
+        'page_content': 'testing it experimentally with two DQD devices based on\naGaAsheterostructure,andweevaluateitsperformance.\nII. EXPERIMENTAL SETUP\nA scanning electron micrograph of our device, that\nis capable of forming up to three QDs, is shown in Fig.1.\nThe device has a two-dimensional electron gas 90nm\nbelow the surface, embedded into a GaAs/AlGaAs het-\nerostructure. We conﬁne electrons by applying negative\nvoltages to gold gates on top of the heterostructure. The\ndesign permits the formation of up to three QDs (labeled\nQD1, QD2 and QD3) in a linear array. This allows us to\nrealize two diﬀerent DQD devices, formed either by QD1\nand QD2 (DQD1), or by QD2 and QD3 (DQD2). When-\never we form a DQD the remaining QD is not formed\nand is therefore part of the reservoir. Three ﬁnger gates,\nvisible at the bottom of Fig.1, are used individually to\ndeﬁne a quantum point contact (QPC) measuring charge\ntransitions in the nearby QDs. When we measure charge\ntransitions of DQD1 (DQD2) we chose the middle (right)\ngate as the QPC gate and keep the remaining two gates\ngrounded.\nFig. 2 shows a charge stability diagram of DQD1.\nWe plot the change ∂IQPC/∂VPGof the current IQPCin\nthe quantum point contact as a function of the plunger', 
+        'metadata': None
+    }, 
+    vector=None, 
+    shard_key=None, 
+    order_value=None
+)
+
+
+
+"""
+def page_qdrant_manager():
+    st.title("Qdrant Manager")
+    container = st.container()
+    
+    client = QdrantClient(path=QDRANT_PATH)
+
+    record_list = client.scroll(
+        collection_name=COLLECTION_NAME,
+        scroll_filter=None,  # すべてのポイントを取得
+        limit=100  # 取得するポイント数（必要に応じて変更）
+    )[0]
+    # type(point_ids): tuple[list[Record], ???]
+    # 
+    # Record: 
+    #   id
+    #   payload
+    #       page_content
+    #       metadata
+    #   vector
+    #   shard_key
+    #   order_value
+
+    ids_and_contents = [str(record.id) + "\n" + str(record.payload["page_content"]) for record in record_list]
+    
+    if not ids_and_contents:
+        st.write("No Data in the collection.")
+    else:
+        selected_ids_and_contects = st.multiselect("Select ID you wanna delete.", ids_and_contents)
+
+        if st.button("Delete"):
+            if selected_ids_and_contects:
+                client.delete(collection_name=COLLECTION_NAME, point_ids=selected_ids_and_contects)
+                st.success("Deleted.")
+            else:
+                st.warning("Select IDs.")
+
+"""
