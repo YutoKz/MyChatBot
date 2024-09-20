@@ -192,8 +192,11 @@ def page_ask_my_pdf():
     llm = select_model()
     timetable_container = st.container()
     QA_container = st.container()
-    #query_container = st.container()
-    #response_container = st.container()
+
+    st.sidebar.markdown("## Credit")
+    st.sidebar.markdown(f"基礎教養科目：      {2}  / {4}")
+    st.sidebar.markdown(f"総合教養科目：      {3}  / {4}")
+    st.sidebar.markdown(f"専門科目：　　      {70} / {80}")
 
     with timetable_container:
         st.markdown("## Timetable")
@@ -242,73 +245,37 @@ def page_ask_my_pdf():
 
         st.markdown(df_timetable.to_html(escape=False, bold_headers=True), unsafe_allow_html=True)
 
-
-    #with query_container:
-    #    st.markdown("## Query")
-    #    query = st.text_input("Query: ", key="input")
-    #    if not query:
-    #        answer = None
-    #    else:
-    #        qa = build_qa_model(llm)
-    #        if qa:
-    #            with st.spinner("ChatGPT is typing ..."):
-    #                answer, cost = ask(qa, query)
-    #            st.session_state.costs.append(cost)
-    #        else:
-    #            answer = None
-    #
-    #    #if answer:
-    #    #    with response_container:
-    #    #        st.markdown("## Answer")
-    #    #        st.write(answer)
-    #with response_container:
-    #    st.markdown("## Answer")
-    #    if answer:
-    #        st.markdown("##### result")
-    #        st.write(answer["result"])
-    #        st.markdown("##### source_documents")
-    #        for i in range(len(answer["source_documents"])):
-    #            st.markdown(f"{i+1}.")
-    #            st.write(answer["source_documents"][i].page_content)
-
     with QA_container:
         st.markdown("## Ask LLM")
         init_messages()
 
-        # ユーザーの入力を監視
-        if user_input := st.chat_input("ChatGPTと相談しよう !"):
-            st.session_state.messages.append(HumanMessage(content=user_input))
-            #with st.spinner("ChatGPT is typing ..."):
-            #    answer, cost = get_answer(llm, st.session_state.messages)
-            qa = build_qa_model(llm)
-            if qa:
-                with st.spinner("ChatGPT is typing ..."):
-                    answer, cost = ask(qa, user_input)
-                #st.write(answer)
-                st.session_state.messages.append(AIMessage(content=answer["result"]))
-                st.session_state.costs.append(cost)
-            else:
-                answer = None
-
-        messages = st.session_state.get('messages', [])
-        for message in reversed(messages):
-            if isinstance(message, AIMessage):
-                with st.chat_message('assistant', avatar="🧠"):
-                    st.markdown(message.content)
-            elif isinstance(message, HumanMessage):
-                with st.chat_message('user', avatar="😀"):
-                    st.markdown(message.content)
-            else:  # isinstance(message, SystemMessage):
-                st.write(f"System message: {message.content}")
-
-
-
-
-
-
-
-
-
+        Q_container, A_container = st.columns(2)
+        with Q_container:
+            # ユーザーの入力を監視
+            if user_input := st.chat_input("ChatGPTと相談しよう !"):
+                st.session_state.messages.append(HumanMessage(content=user_input))
+                #with st.spinner("ChatGPT is typing ..."):
+                #    answer, cost = get_answer(llm, st.session_state.messages)
+                qa = build_qa_model(llm)
+                if qa:
+                    with st.spinner("ChatGPT is typing ..."):
+                        answer, cost = ask(qa, user_input)
+                    #st.write(answer)
+                    st.session_state.messages.append(AIMessage(content=answer["result"]))
+                    st.session_state.costs.append(cost)
+                else:
+                    answer = None
+        with A_container:
+            messages = st.session_state.get('messages', [])
+            for message in reversed(messages):
+                if isinstance(message, AIMessage):
+                    with st.chat_message('assistant', avatar="🧠"):
+                        st.markdown(message.content)
+                elif isinstance(message, HumanMessage):
+                    with st.chat_message('user', avatar="😀"):
+                        st.markdown(message.content)
+                else:  # isinstance(message, SystemMessage):
+                    st.write(f"System message: {message.content}")
 
 
 
