@@ -6,6 +6,11 @@ from langchain_openai import OpenAI
 from langchain_community.callbacks.manager import get_openai_callback
 
 from PyPDF2 import PdfReader
+from langchain.schema import (
+    SystemMessage,
+    HumanMessage,
+    AIMessage
+)
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore  # Qdrant
@@ -167,14 +172,28 @@ def ask(qa, query):
 
     return answer, cb.total_cost
 
+def init_messages():
+    clear_button = st.sidebar.button("Clear Conversation", key="clear")
+    if clear_button or "messages" not in st.session_state:
+        st.session_state.messages = [
+            SystemMessage(content="You are a helpful assistant.")
+        ]
+        st.session_state.costs = []
+
+def get_answer(llm, messages):
+    with get_openai_callback() as cb:
+        answer = llm(messages)
+    return answer.content, cb.total_cost
+
 
 def page_ask_my_pdf():
     st.title("Ask")
 
     llm = select_model()
     timetable_container = st.container()
-    query_container = st.container()
-    response_container = st.container()
+    QA_container = st.container()
+    #query_container = st.container()
+    #response_container = st.container()
 
     with timetable_container:
         st.markdown("## Timetable")
@@ -224,33 +243,66 @@ def page_ask_my_pdf():
         st.markdown(df_timetable.to_html(escape=False, bold_headers=True), unsafe_allow_html=True)
 
 
-    with query_container:
-        st.markdown("## Query")
-        query = st.text_input("Query: ", key="input")
-        if not query:
-            answer = None
-        else:
-            qa = build_qa_model(llm)
-            if qa:
-                with st.spinner("ChatGPT is typing ..."):
-                    answer, cost = ask(qa, query)
-                st.session_state.costs.append(cost)
-            else:
-                answer = None
+    #with query_container:
+    #    st.markdown("## Query")
+    #    query = st.text_input("Query: ", key="input")
+    #    if not query:
+    #        answer = None
+    #    else:
+    #        qa = build_qa_model(llm)
+    #        if qa:
+    #            with st.spinner("ChatGPT is typing ..."):
+    #                answer, cost = ask(qa, query)
+    #            st.session_state.costs.append(cost)
+    #        else:
+    #            answer = None
+    #
+    #    #if answer:
+    #    #    with response_container:
+    #    #        st.markdown("## Answer")
+    #    #        st.write(answer)
+    #with response_container:
+    #    st.markdown("## Answer")
+    #    if answer:
+    #        st.markdown("##### result")
+    #        st.write(answer["result"])
+    #        st.markdown("##### source_documents")
+    #        for i in range(len(answer["source_documents"])):
+    #            st.markdown(f"{i+1}.")
+    #            st.write(answer["source_documents"][i].page_content)
 
-        #if answer:
-        #    with response_container:
-        #        st.markdown("## Answer")
-        #        st.write(answer)
-    with response_container:
-        st.markdown("## Answer")
-        if answer:
-            st.markdown("##### result")
-            st.write(answer["result"])
-            st.markdown("##### source_documents")
-            for i in range(len(answer["source_documents"])):
-                st.markdown(f"{i+1}.")
-                st.write(answer["source_documents"][i].page_content)
+    with QA_container:
+        init_messages()
+
+        # ユーザーの入力を監視
+        if user_input := st.chat_input("ChatGPTと相談しよう!!"):
+            st.session_state.messages.append(HumanMessage(content=user_input))
+            with st.spinner("ChatGPT is typing ..."):
+                answer, cost = get_answer(llm, st.session_state.messages)
+            st.session_state.messages.append(AIMessage(content=answer))
+            st.session_state.costs.append(cost)
+
+        messages = st.session_state.get('messages', [])
+        for message in messages:
+            if isinstance(message, AIMessage):
+                with st.chat_message('assistant'):
+                    st.markdown(message.content)
+            elif isinstance(message, HumanMessage):
+                with st.chat_message('user'):
+                    st.markdown(message.content)
+            else:  # isinstance(message, SystemMessage):
+                st.write(f"System message: {message.content}")
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------------------------------
 
