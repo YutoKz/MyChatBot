@@ -176,7 +176,7 @@ def init_messages():
     clear_button = st.sidebar.button("Clear Conversation", key="clear")
     if clear_button or "messages" not in st.session_state:
         st.session_state.messages = [
-            SystemMessage(content="You are a helpful assistant.")
+            SystemMessage(content="Let's decide the timetable together!")
         ]
         st.session_state.costs = []
 
@@ -272,23 +272,31 @@ def page_ask_my_pdf():
     #            st.write(answer["source_documents"][i].page_content)
 
     with QA_container:
+        st.markdown("## Ask LLM")
         init_messages()
 
         # ユーザーの入力を監視
-        if user_input := st.chat_input("ChatGPTと相談しよう!!"):
+        if user_input := st.chat_input("ChatGPTと相談しよう !"):
             st.session_state.messages.append(HumanMessage(content=user_input))
-            with st.spinner("ChatGPT is typing ..."):
-                answer, cost = get_answer(llm, st.session_state.messages)
-            st.session_state.messages.append(AIMessage(content=answer))
-            st.session_state.costs.append(cost)
+            #with st.spinner("ChatGPT is typing ..."):
+            #    answer, cost = get_answer(llm, st.session_state.messages)
+            qa = build_qa_model(llm)
+            if qa:
+                with st.spinner("ChatGPT is typing ..."):
+                    answer, cost = ask(qa, user_input)
+                #st.write(answer)
+                st.session_state.messages.append(AIMessage(content=answer["result"]))
+                st.session_state.costs.append(cost)
+            else:
+                answer = None
 
         messages = st.session_state.get('messages', [])
-        for message in messages:
+        for message in reversed(messages):
             if isinstance(message, AIMessage):
-                with st.chat_message('assistant'):
+                with st.chat_message('assistant', avatar="🧠"):
                     st.markdown(message.content)
             elif isinstance(message, HumanMessage):
-                with st.chat_message('user'):
+                with st.chat_message('user', avatar="😀"):
                     st.markdown(message.content)
             else:  # isinstance(message, SystemMessage):
                 st.write(f"System message: {message.content}")
