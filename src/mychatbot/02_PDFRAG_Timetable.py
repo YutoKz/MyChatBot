@@ -192,6 +192,24 @@ def page_ask_my_pdf():
         # csvの表示
         df_timetable = pd.read_csv(DATA_PATH +"/timetable/"+ faculty+"_"+major+"_"+grade+"_"+semester +".csv")
         
+        st.markdown(
+            """
+                <style>
+                .kiso-kyouyou {
+                    color: lightgreen;  /* 文字の色 */
+                    font-weight: bold;
+                }
+                .sougou-kyouyou {
+                    color: orange;  /* 文字の色 */
+                    font-weight: bold;
+                }
+                </style>
+            """, 
+            unsafe_allow_html=True
+        )
+        # セルごとに書式を変更
+        # df.at[0, '名前'] = '<span class="highlight-cell">田中</span>'
+
         ## Pandas Stylerで文字の大きさを一括指定
         df_timetable = df_timetable.style.set_properties(**{
             'font-size': '12px',
@@ -202,25 +220,6 @@ def page_ask_my_pdf():
             ]  # 各セルの列幅
         ).hide()
 
-        # セルごとに書式を変更
-        # st.markdown(
-        #     """
-        #         <style>
-        #         .orange-cell {
-        #             color: orange;  /* 文字の色 */
-        #             font-size: 10px;  /* 文字の大きさ */
-        #             text-align: center;  /* 中央揃え */
-        #         }
-        #         .black-cell {
-        #             color: black;  /* 文字の色 */
-        #             font-size: 10px;  /* 文字の大きさ */
-        #             text-align: center;  /* 中央揃え */
-        #         }
-        #         </style>
-        #     """, 
-        #     unsafe_allow_html=True
-        # )
-        # df.at[0, '名前'] = '<span class="highlight-cell">田中</span>'
 
         st.markdown(df_timetable.to_html(escape=False, bold_headers=True), unsafe_allow_html=True)
 
