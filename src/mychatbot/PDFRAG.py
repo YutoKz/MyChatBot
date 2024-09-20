@@ -84,8 +84,8 @@ def load_qdrant():
     )
 
 
-def build_vector_store(pdf_text):
-    qdrant = load_qdrant()
+def build_vector_store(qdrant,pdf_text):
+    # qdrant = load_qdrant()
     qdrant.add_texts(pdf_text)
 
     # 以下のようにもできる。この場合は毎回ベクトルDBが初期化される
@@ -97,6 +97,41 @@ def build_vector_store(pdf_text):
     #     collection_name="my_documents",
     # )
 
+def page_pdf_upload_and_build_vector_db():
+    st.title("VectorDB")
+    container = st.container()
+    container_manager = st.container()
+
+    qdrant = load_qdrant()
+    
+    with container:
+        st.markdown("## Upload")
+        pdf_text = get_pdf_text()
+        if pdf_text:
+            with st.spinner("Loading PDF ..."):
+                build_vector_store(qdrant, pdf_text)
+
+    # Manager
+    if qdrant:
+        with container_manager:
+            st.markdown("## Manage")
+            record_list = qdrant.client.scroll(COLLECTION_NAME, limit=100)
+
+            if not record_list:
+                st.warning("No Data")
+            else:
+                # for record in record_list[0]:
+                #     st.write(f"{record.id}, {record.payload["page_content"][:50]}...")
+
+                selected = st.selectbox("Select ID you wanna delete.", [str(record.payload["page_content"][:100]) + "\n" + str(record.id) for record in record_list[0]])
+
+                # Delete Button
+                if st.button("Delete"):
+                    qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[selected[-32:]])
+                    st.success(f"ID: {selected[-32:]} deleted.")
+
+
+# ------------------------------------------------------------------------------------------------------
 
 def build_qa_model(llm):
     qdrant = load_qdrant()
@@ -113,17 +148,6 @@ def build_qa_model(llm):
         return_source_documents=True,
         verbose=True
     )
-
-
-def page_pdf_upload_and_build_vector_db():
-    st.title("PDF Upload")
-    container = st.container()
-    with container:
-        pdf_text = get_pdf_text()
-        if pdf_text:
-            with st.spinner("Loading PDF ..."):
-                build_vector_store(pdf_text)
-
 
 def ask(qa, query):
     with get_openai_callback() as cb:
@@ -158,14 +182,15 @@ def page_ask_my_pdf():
                 st.markdown("## Answer")
                 st.write(answer)
 
+# ------------------------------------------------------------------------------------------------------
 
 def main():
     init_page()
 
-    selection = st.sidebar.radio("Go to", ["PDF Upload", "Ask My PDF(s)"])
-    if selection == "PDF Upload":
+    selection = st.sidebar.radio("Go to", ["VectorDB", "Ask"])
+    if selection == "VectorDB":
         page_pdf_upload_and_build_vector_db()
-    elif selection == "Ask My PDF(s)":
+    elif selection == "Ask":
         page_ask_my_pdf()
 
     costs = st.session_state.get('costs', [])
