@@ -196,7 +196,11 @@ def page_ask_my_pdf():
         df_timetable = df_timetable.style.set_properties(**{
             'font-size': '12px',
             'text-align': 'center',
-        })
+        }).set_table_styles([
+                {'selector': 'th', 'props': [('min-width', '141px'), ('max-width', '141px')]},  # ヘッダーの列幅
+                {'selector': 'td', 'props': [('min-width', '141px'), ('max-width', '141px')]}
+            ]  # 各セルの列幅
+        ).hide()
 
         # セルごとに書式を変更
         # st.markdown(
@@ -218,7 +222,7 @@ def page_ask_my_pdf():
         # )
         # df.at[0, '名前'] = '<span class="highlight-cell">田中</span>'
 
-        st.markdown(df_timetable.to_html(escape=False), unsafe_allow_html=True)
+        st.markdown(df_timetable.to_html(escape=False, bold_headers=True), unsafe_allow_html=True)
 
 
     with query_container:
