@@ -119,9 +119,10 @@ def page_pdf_upload_and_build_vector_db():
     with container:
         st.markdown("## Upload")
         pdf_text = get_pdf_text()
-        if pdf_text:
+        if pdf_text and st.button("Upload"):
             with st.spinner("Loading PDF ..."):
                 build_vector_store(qdrant, pdf_text)
+                st.rerun()
 
     # Manager
     if qdrant:
@@ -150,6 +151,7 @@ def page_pdf_upload_and_build_vector_db():
                 if st.button("Delete"):
                     qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=selected_ids)
                     st.success(f"{selected_ids} deleted.")
+                    st.rerun()
                 if st.button("DeleteALL"):
                     for record in record_list[0]:
                         qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[str(record.id)])
