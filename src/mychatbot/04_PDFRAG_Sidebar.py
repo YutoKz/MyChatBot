@@ -95,18 +95,18 @@ def get_pdf_text(file_uploader_key):
     else:
         return None
 
-def build_vector_store(qdrant,pdf_text):
-    # qdrant = load_qdrant()
-    qdrant.add_texts(pdf_text)
-
-    # 以下のようにもできる。この場合は毎回ベクトルDBが初期化される
-    # LangChain の Document Loader を利用した場合は `from_documents` にする
-    # Qdrant.from_texts(
-    #     pdf_text,
-    #     OpenAIEmbeddings(),
-    #     path="./local_qdrant",
-    #     collection_name="my_documents",
-    # )
+#def build_vector_store(qdrant, pdf_text, metadatas=None):   # metadata: List[dict]
+#    # qdrant = load_qdrant()
+#    qdrant.add_texts(pdf_text, metadatas=metadatas)         # metadata: List[dict]
+#
+#    # 以下のようにもできる。この場合は毎回ベクトルDBが初期化される
+#    # LangChain の Document Loader を利用した場合は `from_documents` にする
+#    # Qdrant.from_texts(
+#    #     pdf_text,
+#    #     OpenAIEmbeddings(),
+#    #     path="./local_qdrant",
+#    #     collection_name="my_documents",
+#    # )
 
 def page_upload_and_build_vector_db():
     st.title("Upload to VectorDB")
@@ -115,26 +115,63 @@ def page_upload_and_build_vector_db():
     container_Syllabus = st.container()
     container_StudentHandbook = st.container()
     
+
     with container_Syllabus:
         st.markdown("### Syllabus")
         pdf_text = get_pdf_text("Syllabus")
-        if pdf_text and st.button("Upload"):
-            with st.spinner("Loading ..."):
-                build_vector_store(qdrant, pdf_text)
-                #st.rerun()
+        
+        col_lectureCode, col_uploadButton = st.columns(2)
+        with col_lectureCode:
+            lectureCode = st.text_input("Lecture Code")
+        with col_uploadButton:
+            if st.button("Upload"):
+                if not pdf_text:
+                    st.warning("Upload Syllabus")
+                elif not lectureCode:
+                    st.warning("Fill in the blank")
+                else:    
+                    with st.spinner("Loading ..."):
+                        qdrant.add_texts(pdf_text, metadatas=[{"type": "Syllabus", "Lecture Code": lectureCode}])
+                        #st.rerun()
+                    
     with container_StudentHandbook:
         st.markdown("### Student Handbook")
         pdf_text = get_pdf_text("Student Handbook")
-        if pdf_text and st.button("Upload"):
-            with st.spinner("Loading ..."):
-                build_vector_store(qdrant, pdf_text)
-                #st.rerun()
+
+        #if st.button("Upload") and pdf_text:
+        #    with st.spinner("Loading ..."):
+        #        #build_vector_store(qdrant, pdf_text)
+        #        qdrant.add_texts(pdf_text, metadatas=[{"type": "Syllabus"}])
+        #        #st.rerun()
+
+        col_organization, col_uploadButton = st.columns(2)
+        with col_organization:
+            organization = st.text_input("Organization")
+        with col_uploadButton:
+            if st.button("Upload", key="uploadStudentHandbook"):
+                if not pdf_text:
+                    st.warning("Upload")
+                elif not organization:
+                    st.warning("Fill in the blank")
+                else:    
+                    with st.spinner("Loading ..."):
+                        qdrant.add_texts(pdf_text, metadatas=[{"type": "Student Handbook", "Organization": organization} for _ in range(len(pdf_text))])
 
 
 
 # -------------------------------------------------------------------------------------------------------
 # Manage VectorDB
-    
+
+def filter_record(record, selected_type, selected_):
+    if record.payload["metadata"] == None:
+        return True
+    if selected_type != "ALL" and record.payload["metadata"]["type"] != selected_type:
+        return False
+    if selected_ != "ALL" and record.payload["metadata"]["type"] != selected_:
+        return False
+    return True
+
+
 def page_manage_vector_db():
     container_manager = st.container()
     qdrant = load_qdrant(collection_name=COLLECTION_NAME)
@@ -142,7 +179,7 @@ def page_manage_vector_db():
     if qdrant:
         with container_manager:
             st.title("Manage VectorDB")
-            st.markdown("## Manage")
+            st.markdown("## Select")
             record_list = qdrant.client.scroll(COLLECTION_NAME, limit=200)
 
             if not record_list:
@@ -167,11 +204,27 @@ def page_manage_vector_db():
                     qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=selected_ids)
                     st.success(f"{selected_ids} deleted.")
                     st.rerun()
+
+                # List
+                st.markdown("## List")    
+                # フィルタ機能
+                col_type, col_ = st.columns(2)
+                with col_type:
+                    selected_type = st.selectbox("Type", ["ALL", "Syllabus", "Student Handbook"])
+                with col_:
+                    selected_ = st.selectbox("_", ["ALL", "_"])
+                filtered_record_list = [record for record in record_list[0] if filter_record(record, selected_type, selected_)]
+                st.write(filtered_record_list)
+                #st.write(record_list[0])
+
                 if st.button("DeleteALL"):
-                    for record in record_list[0]:
+                    for record in filtered_record_list:
                         qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[str(record.id)])
+                    st.rerun()
                 
+                # id による参照
                 #st.write(qdrant.client.retrieve(collection_name=COLLECTION_NAME, ids=[selected]).payload["page_content"])
+
 
 # -------------------------------------------------------------------------------------------------------
 # Ask
