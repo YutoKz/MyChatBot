@@ -50,7 +50,7 @@ def select_model():
 # -------------------------------------------------------------------------------------------------------
 # Upload to VectorDB
 
-def load_qdrant():
+def load_qdrant(collection_name):
     client = QdrantClient(path=QDRANT_PATH)
 
     # すべてのコレクション名を取得
@@ -58,10 +58,10 @@ def load_qdrant():
     collection_names = [collection.name for collection in collections]
 
     # コレクションが存在しなければ作成
-    if COLLECTION_NAME not in collection_names:
+    if collection_name not in collection_names:
         # コレクションが存在しない場合、新しく作成します
         client.create_collection(
-            collection_name=COLLECTION_NAME,
+            collection_name=collection_name,
             vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
         )
         print('collection created')
@@ -69,7 +69,7 @@ def load_qdrant():
     #return Qdrant(
     return QdrantVectorStore(
         client=client,
-        collection_name=COLLECTION_NAME, 
+        collection_name=collection_name, 
         embedding=OpenAIEmbeddings()
     )
 
@@ -110,7 +110,7 @@ def build_vector_store(qdrant,pdf_text):
 
 def page_upload_and_build_vector_db():
     st.title("Upload to VectorDB")
-    qdrant = load_qdrant()
+    qdrant = load_qdrant(collection_name=COLLECTION_NAME)
 
     container_Syllabus = st.container()
     container_StudentHandbook = st.container()
@@ -137,7 +137,7 @@ def page_upload_and_build_vector_db():
     
 def page_manage_vector_db():
     container_manager = st.container()
-    qdrant = load_qdrant()
+    qdrant = load_qdrant(collection_name=COLLECTION_NAME)
     # Manager
     if qdrant:
         with container_manager:
@@ -177,7 +177,7 @@ def page_manage_vector_db():
 # Ask
 
 def build_qa_model(llm):
-    qdrant = load_qdrant()
+    qdrant = load_qdrant(collection_name=COLLECTION_NAME)
     retriever = qdrant.as_retriever(
         # "mmr",  "similarity_score_threshold" などもある
         search_type="similarity",
