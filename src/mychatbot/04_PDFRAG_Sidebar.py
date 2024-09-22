@@ -135,15 +135,28 @@ def page_pdf_upload_and_build_vector_db():
                 # for record in record_list[0]:
                 #     st.write(f"{record.id}, {record.payload["page_content"][:50]}...")
 
-                selected = st.selectbox("Select ID you wanna delete", [str(record.payload["page_content"][:100]) + "\n" + str(record.id) for record in record_list[0]])
+                selected_records = st.multiselect(
+                    "Select Records you wanna delete", 
+                    [str(record.payload["page_content"][:100]) + "...\n" + str(record.id) for record in record_list[0]],
+                )
+
+                if selected_records:
+                    for record in selected_records:
+                        st.write(record)
+                
+                selected_ids = [selected_record[-32:] for selected_record in selected_records]
 
                 # Delete Button
                 if st.button("Delete"):
-                    qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[selected[-32:]])
-                    st.success(f"ID: {selected[-32:]} deleted.")
+                    qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=selected_ids)
+                    st.success(f"{selected_ids} deleted.")
                 if st.button("DeleteALL"):
                     for record in record_list[0]:
                         qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[str(record.id)])
+                
+                #st.write(qdrant.client.retrieve(collection_name=COLLECTION_NAME, ids=[selected]).payload["page_content"])
+
+                
 
 
 # -------------------------------------------------------------------------------------------------------
