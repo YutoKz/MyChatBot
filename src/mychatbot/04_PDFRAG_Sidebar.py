@@ -48,13 +48,14 @@ def select_model():
     return ChatOpenAI(temperature=0, model=st.session_state.model_name)
 
 # -------------------------------------------------------------------------------------------------------
-# VectorDB
+# Upload to VectorDB
 
-def get_pdf_text():
+def get_pdf_text(file_uploader_key):
     uploaded_file = st.file_uploader(
         label='Upload your PDF here😇',
         type='pdf',
         accept_multiple_files=False,
+        key=file_uploader_key
     )
     if uploaded_file:
         pdf_reader = PdfReader(uploaded_file)
@@ -109,21 +110,36 @@ def build_vector_store(qdrant,pdf_text):
     #     collection_name="my_documents",
     # )
 
-def page_pdf_upload_and_build_vector_db():
-    st.title("VectorDB")
-    container = st.container()
-    container_manager = st.container()
-
+def page_upload_and_build_vector_db():
+    st.title("Upload to VectorDB")
     qdrant = load_qdrant()
-    
-    with container:
-        st.markdown("## Upload")
-        pdf_text = get_pdf_text()
-        if pdf_text and st.button("Upload"):
-            with st.spinner("Loading PDF ..."):
-                build_vector_store(qdrant, pdf_text)
-                st.rerun()
 
+    container_Syllabus = st.container()
+    container_StudentHandbook = st.container()
+    
+    with container_Syllabus:
+        st.markdown("### Syllabus")
+        pdf_text = get_pdf_text("Syllabus")
+        if pdf_text and st.button("Upload"):
+            with st.spinner("Loading ..."):
+                build_vector_store(qdrant, pdf_text)
+                #st.rerun()
+    with container_StudentHandbook:
+        st.markdown("### Student Handbook")
+        pdf_text = get_pdf_text("Student Handbook")
+        if pdf_text and st.button("Upload"):
+            with st.spinner("Loading ..."):
+                build_vector_store(qdrant, pdf_text)
+                #st.rerun()
+
+
+
+# -------------------------------------------------------------------------------------------------------
+# Manage VectorDB
+    
+def page_manage_vector_db():
+    container_manager = st.container()
+    qdrant = load_qdrant()
     # Manager
     if qdrant:
         with container_manager:
@@ -157,9 +173,6 @@ def page_pdf_upload_and_build_vector_db():
                         qdrant.client.delete(collection_name=COLLECTION_NAME, points_selector=[str(record.id)])
                 
                 #st.write(qdrant.client.retrieve(collection_name=COLLECTION_NAME, ids=[selected]).payload["page_content"])
-
-                
-
 
 # -------------------------------------------------------------------------------------------------------
 # Ask
@@ -299,9 +312,11 @@ def page_ask_my_pdf():
 def main():
     init_page()
 
-    selection = st.sidebar.radio("Go to", ["VectorDB", "Ask"])
-    if selection == "VectorDB":
-        page_pdf_upload_and_build_vector_db()
+    selection = st.sidebar.radio("Go to", ["Upload to VectorDB", "Manage VectorDB", "Ask"])
+    if selection == "Upload to VectorDB":
+        page_upload_and_build_vector_db()
+    elif selection == "Manage VectorDB":
+        page_manage_vector_db()
     elif selection == "Ask":
         page_ask_my_pdf()
 
