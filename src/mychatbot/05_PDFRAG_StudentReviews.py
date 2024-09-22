@@ -173,12 +173,12 @@ def filter_record(record, selected_type, selected_):
 
 
 def page_manage_vector_db():
+    st.title("Manage VectorDB")
     container_manager = st.container()
     qdrant = load_qdrant(collection_name=COLLECTION_NAME)
     # Manager
     if qdrant:
         with container_manager:
-            st.title("Manage VectorDB")
             st.markdown("## Select")
             record_list = qdrant.client.scroll(COLLECTION_NAME, limit=200)
 
@@ -224,6 +224,39 @@ def page_manage_vector_db():
                 
                 # id による参照
                 #st.write(qdrant.client.retrieve(collection_name=COLLECTION_NAME, ids=[selected]).payload["page_content"])
+
+
+# -------------------------------------------------------------------------------------------------------
+# Student Reviews
+# メモ：大学・学部・学科・科目・出席点・授業の雰囲気・テストの有無と難易度・充実度（5段階評価）・学んだこと等に関する感想
+
+def page_student_reviews():
+    st.title("Student Reviews")
+    st.markdown("（ここに投稿されたレビューの一覧表示）")
+
+    qdrant = load_qdrant(collection_name="StudentReview")
+    
+    # sidebar
+    st.sidebar.markdown("")
+    st.sidebar.markdown("")
+    st.sidebar.markdown("### Post Your Review!")
+    college = st.sidebar.text_input("College / University")
+    faculty = st.sidebar.text_input("Faculty")
+    major = st.sidebar.text_input("Major")
+    st.sidebar.markdown("")
+    st.sidebar.markdown("")
+    subject = st.sidebar.text_input("Subject")
+    lectureCode = st.sidebar.text_input("Lecture Code")
+    attendance_points = st.sidebar.selectbox("Attendance Points", ["O", "X"])
+    tests = st.sidebar.text_area("Tests")
+    comment = st.sidebar.text_area("Comment")
+    satisfaction = st.sidebar.select_slider("Satisfaction", ["1", "2", "3", "4", "5"])
+    
+    review_text = "開講大学：" + college + "\n開講学部：" + faculty + "\n開講学科：" + major + "\n\n科目名(授業コード)：" + subject + "(" + lectureCode + ")" + "\n出席点の有無：" + ("あり" if (attendance_points=="O") else "なし") + "\nテストについて：\n" + tests + "\n感想やコメント：" + comment + "\n満足度：" + satisfaction
+    if st.sidebar.button("Post", key="postStudentReview", use_container_width=True):
+        # レビューを投稿（ベクトルDBに格納）
+        with st.spinner("Loading ..."):
+            qdrant.add_texts(review_text, metadatas=[{"type": "Student Handbook", "Lecture Code": lectureCode} for _ in range(len(review_text))])
 
 
 # -------------------------------------------------------------------------------------------------------
@@ -368,11 +401,13 @@ def page_ask_my_pdf():
 def main():
     init_page()
 
-    selection = st.sidebar.radio("Go to", ["Upload to VectorDB", "Manage VectorDB", "Student Reviews", "Ask"])
-    if selection == "Upload to VectorDB":
+    selection = st.sidebar.radio("Go to", ["[admin] Upload to VectorDB", "[admin] Manage VectorDB", "Student Reviews", "Ask"])
+    if selection == "[admin] Upload to VectorDB":
         page_upload_and_build_vector_db()
-    elif selection == "Manage VectorDB":
+    elif selection == "[admin] Manage VectorDB":
         page_manage_vector_db()
+    elif selection == "Student Reviews":
+        page_student_reviews()
     elif selection == "Ask":
         page_ask_my_pdf()
 
