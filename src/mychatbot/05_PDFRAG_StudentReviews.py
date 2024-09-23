@@ -32,7 +32,6 @@ def init_page():
         page_title="Ask My PDF(s)",
         page_icon="🤗"
     )
-    st.sidebar.title("Nav")
     st.session_state.costs = []
 
 
@@ -427,9 +426,9 @@ def page_ask_my_pdf():
 
         GPT_container, StudentReview_container = st.columns(2)
         with GPT_container:
-            st.markdown("##### ChatGPT")
+            st.markdown("##### Syllabus")
             # ユーザーの入力を監視
-            if user_input := st.chat_input("ChatGPTと相談しよう !"):
+            if user_input := st.chat_input("例）授業内容を箇条書きで教えて！"):
                 st.session_state.messages.append(HumanMessage(content=user_input))
                 #with st.spinner("ChatGPT is typing ..."):
                 #    answer, cost = get_answer(llm, st.session_state.messages)
@@ -464,15 +463,21 @@ def page_ask_my_pdf():
 def main():
     init_page()
 
-    selection = st.sidebar.radio("Go to", ["[admin] Upload to VectorDB", "[admin] Manage VectorDB", "Student Reviews", "Ask"])
-    if selection == "[admin] Upload to VectorDB":
-        page_upload_and_build_vector_db()
-    elif selection == "[admin] Manage VectorDB":
-        page_manage_vector_db()
-    elif selection == "Student Reviews":
-        page_student_reviews()
-    elif selection == "Ask":
-        page_ask_my_pdf()
+    switch = st.sidebar.checkbox("Admin")
+
+    selection_admin = st.sidebar.radio("Admin", ["Upload to VectorDB", "Manage VectorDB"], disabled=not switch)
+    if switch:
+        if selection_admin == "Upload to VectorDB":
+            page_upload_and_build_vector_db()
+        elif selection_admin == "Manage VectorDB":
+            page_manage_vector_db()
+
+    selection_user = st.sidebar.radio("Menu", ["Student Reviews", "Ask LLM"], disabled=switch)
+    if not switch:
+        if selection_user == "Student Reviews":
+            page_student_reviews()
+        elif selection_user == "Ask LLM":
+            page_ask_my_pdf()
 
     costs = st.session_state.get('costs', [])
     st.sidebar.markdown("## Costs")
