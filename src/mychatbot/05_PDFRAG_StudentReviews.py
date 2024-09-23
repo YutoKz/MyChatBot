@@ -120,7 +120,7 @@ def page_upload_and_build_vector_db():
         st.markdown("### Syllabus")
         pdf_text = get_pdf_text("Syllabus")
         
-        col_lectureCode, col_uploadButton = st.columns(2)
+        col_lectureCode, col_uploadButton = st.columns((5, 1), vertical_alignment="bottom")
         with col_lectureCode:
             lectureCode = st.text_input("Lecture Code")
         with col_uploadButton:
@@ -144,7 +144,7 @@ def page_upload_and_build_vector_db():
         #        qdrant.add_texts(pdf_text, metadatas=[{"type": "Syllabus"}])
         #        #st.rerun()
 
-        col_organization, col_uploadButton = st.columns(2)
+        col_organization, col_uploadButton = st.columns((5, 1), vertical_alignment="bottom")
         with col_organization:
             organization = st.text_input("Organization")
         with col_uploadButton:
@@ -210,7 +210,7 @@ def page_manage_vector_db():
                 # フィルタ機能
                 col_type, col_ = st.columns(2)
                 with col_type:
-                    selected_type = st.selectbox("Type", ["ALL", "Syllabus", "Student Handbook"])
+                    selected_type = st.selectbox("Type", ["ALL", "Syllabus", "Student Handbook", "Student Review"])
                 with col_:
                     selected_ = st.selectbox("_", ["ALL", "_"])
                 filtered_record_list = [record for record in record_list[0] if filter_record(record, selected_type, selected_)]
@@ -230,11 +230,23 @@ def page_manage_vector_db():
 # Student Reviews
 # メモ：大学・学部・学科・科目・出席点・授業の雰囲気・テストの有無と難易度・充実度（5段階評価）・学んだこと等に関する感想
 
+def filter_review(review, selected_faculty, selected_major):
+    if review.payload["metadata"] == None:
+        return False
+    if "type" not in review.payload["metadata"]:
+        return False
+    if review.payload["metadata"]["type"] != "Student Review":
+        return False
+    if selected_faculty != "ALL" and ("faculty" in review.payload["metadata"]) and review.payload["metadata"]["faculty"] != selected_faculty:
+        return False
+    if selected_major != "ALL" and ("major" in review.payload["metadata"]) and review.payload["metadata"]["major"] != selected_major:
+        return False
+    return True
+
 def page_student_reviews():
     st.title("Student Reviews")
-    st.markdown("（ここに投稿されたレビューの一覧表示）")
 
-    qdrant = load_qdrant(collection_name="StudentReview")
+    qdrant = load_qdrant(collection_name=COLLECTION_NAME)
     
     # sidebar
     st.sidebar.markdown("")
@@ -251,12 +263,63 @@ def page_student_reviews():
     tests = st.sidebar.text_area("Tests")
     comment = st.sidebar.text_area("Comment")
     satisfaction = st.sidebar.select_slider("Satisfaction", ["1", "2", "3", "4", "5"])
-    
-    review_text = "開講大学：" + college + "\n開講学部：" + faculty + "\n開講学科：" + major + "\n\n科目名(授業コード)：" + subject + "(" + lectureCode + ")" + "\n出席点の有無：" + ("あり" if (attendance_points=="O") else "なし") + "\nテストについて：\n" + tests + "\n感想やコメント：" + comment + "\n満足度：" + satisfaction
+    ## 格納
+    review_text = f"科目名(授業コード)：{subject} ({lectureCode})<br>出席点の有無：{"あり" if (attendance_points=="O") else "なし"}<br>テストについて：{tests}<br>感想やコメント：{comment}<br>満足度：{satisfaction}"
     if st.sidebar.button("Post", key="postStudentReview", use_container_width=True):
         # レビューを投稿（ベクトルDBに格納）
         with st.spinner("Loading ..."):
-            qdrant.add_texts(review_text, metadatas=[{"type": "Student Handbook", "Lecture Code": lectureCode} for _ in range(len(review_text))])
+            qdrant.add_texts([review_text], metadatas=[{"type": "Student Review", "Subject": subject, "Lecture Code": lectureCode, "college": college, "faculty": faculty, "major": major}])
+
+    # 本体
+    container_reviewList = st.container()
+
+    reviews_list = qdrant.client.scroll(COLLECTION_NAME, limit=200)
+    st.markdown(
+        """
+        <style>
+        .custom-container {
+            background-color: #e8e8e8;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    with container_reviewList:
+        # フィルタ機能
+        #col_college, col_faculty, col_major = st.columns(3)
+        #with col_college:
+        #    selected_college = st.selectbox("Type", ["ALL", "Kobe", ""])
+        col_faculty, col_major, col_subject, col_lectureCode = st.columns((3,3,2,2))
+        with col_faculty:
+            selected_faculty = st.selectbox("Faculty", ["ALL", "Engineering"])
+        with col_major:
+            selected_major = st.selectbox("Major", ["ALL", "Information", "Mechanical"])
+        with col_subject:
+            inputed_subject = st.text_input("Subject", key="subject")
+        with col_lectureCode:
+            inputed_lectureCode = st.text_input("Lecture Code", key="lectureCode")
+        filtered_reviews = [review for review in reviews_list[0] if filter_review(review, selected_faculty, selected_major)]
+        if inputed_subject:
+            filtered_reviews = [review for review in filtered_reviews if (review.payload["metadata"]["Subject"] == inputed_subject)]
+        if inputed_lectureCode:
+            filtered_reviews = [review for review in filtered_reviews if (review.payload["metadata"]["Lecture Code"] == inputed_lectureCode)]
+        
+        # 表示
+        col_left, col_center, col_right = st.columns(3)
+        col_list = [col_left, col_center, col_right]
+        for i, review in enumerate(filtered_reviews):
+            with col_list[i % 3]:
+                with st.container():
+                    st.markdown(f'<div class="custom-container"> {review.payload["page_content"]} </div>', unsafe_allow_html=True)
+                
+
+        #for review in filtered_reviews:
+        #    st.write(review.payload["page_content"], unsafe_allow_html=True)
 
 
 # -------------------------------------------------------------------------------------------------------
