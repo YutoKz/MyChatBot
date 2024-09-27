@@ -1,6 +1,6 @@
 Mon,Tue,Wed,Thu,Fri
--,-,<span class="sougou-kyouyou">[総合教養]</span>,システムモデル,総合演習
-[総合教養],確率と統計,<span class="kiso-kyouyou">[基礎教養],複素関数論,電子回路
-アルゴリズム・データ構造,常微分方程式論,-,信号解析,-
-アルゴリズム・データ構造演習,外国語第2,論理回路,信号解析演習,-
+-,-,<span class="sougou-kyouyou">[総合教養]</span>,システム,~
+[総合教養],確率論,<span class="kiso-kyouyou">[基礎教養],複素関数,論理回路
+アルゴリズム,微分方程式,-,信号解析1,-
+アルゴリズム演習,外国語第2,電子回路,信号解析2,-
 <span class="sougou-kyouyou">[総合教養]</span>,<span class="sougou-kyouyou">[総合教養]</span>,<span class="sougou-kyouyou">[総合教養]</span>,線形代数,-
