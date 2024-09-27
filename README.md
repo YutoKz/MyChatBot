@@ -22,7 +22,7 @@
 - シラバスをデータベースとして保持しておき、相談しながら一緒に時間割を組んでくれる
 
 ### 環境構築
-パッケージ管理ツールとして`[Rye](https://rye.astral.sh/)`を使用
+パッケージ管理ツールとして[`Rye`](https://rye.astral.sh/)を使用
 ##### pyproject.toml
 OpenAI_API_KEY が記載されているファイルは GitHub にプッシュできないので、テンプレートを `pyproject_template.txt` に記載
 
