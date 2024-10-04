@@ -1,6 +1,6 @@
 # MyChatBot
 ### Streamlit Cloud
-[URL](https://mychatbot-05.streamlit.app/)
+[Streamlit Cloud で公開済み](https://mychatbot-05.streamlit.app/)
 - 時間割やシラバスは架空のもの
 - シラバスはPDF形式でアップロード
 - 口コミ機能
